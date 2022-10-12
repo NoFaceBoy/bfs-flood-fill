@@ -1,53 +1,47 @@
-picture = [line.split() for line in open('resources/input.txt')]
+def unpack():
+    import re
+    file = open("resources/input.txt", "r")
+    lines = file.readlines()
+    color_picture = [line.split() for line in lines[3:]]
+    row_size, column_size = re.findall("\\d+", lines[0])
+    value_x, value_y = re.findall("\\d+", lines[1])
+    new_color_value = re.findall("[A-Z]", lines[2])[0]
+    return int(value_x), int(value_y), int(row_size), int(column_size), str(new_color_value), color_picture
 
 
-def flood_fill(picture, row, column, x, y, current_color, new_color):
-    queue = [[x, y]]
-    picture[x][y] = new_color
+row, column, width, height, color, img = unpack()
 
-    while queue:
-        current_pixel = queue.pop()
 
-        pos_x = current_pixel[0]
-        pos_y = current_pixel[1]
-
-        if satisfies(picture, row, column, pos_x + 1, pos_y, current_color, new_color):
-            picture[pos_x + 1][pos_y] = new_color
-            queue.append([pos_x + 1, pos_y])
-
-        if satisfies(picture, row, column, pos_x - 1, pos_y, current_color, new_color):
-            picture[pos_x - 1][pos_y] = new_color
-            queue.append([pos_x - 1, pos_y])
-
-        if satisfies(picture, row, column, pos_x, pos_y + 1, current_color, new_color):
-            picture[pos_x][pos_y + 1] = new_color
-            queue.append([pos_x, pos_y + 1])
-
-        if satisfies(picture, row, column, pos_x, pos_y - 1, current_color, new_color):
-            picture[pos_x][pos_y - 1] = new_color
-            queue.append([pos_x, pos_y - 1])
+def flood_fill(picture, x, y, new_color):
+    pixel_color = picture[x][y]
+    queue = [(x, y)]
+    visited = set()
+    while len(queue) > 0:
+        x, y = queue.pop(0)
+        visited.add((x, y))
+        if picture[x][y] == pixel_color:
+            picture[x][y] = new_color
+        for x, y in neighbors(picture, x, y, pixel_color):
+            if (x, y) not in visited:
+                queue.append((x, y))
 
     return picture
 
 
-def satisfies(picture, row, column, x, y, current_color, new_color):
-    if (x or y) < 0 or x >= row or y >= column or picture[x][y] != current_color or picture[x][y] == new_color:
-        return False
-    return True
+def neighbors(picture, x, y, pixel_color):
+    variations = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+    return [(x, y) for x, y in variations if satisfies(picture, x, y, pixel_color)]
 
 
-x = 3
-y = 9
+def satisfies(picture, x, y, pixel_color):
+    return 0 <= x < width and 0 <= y < height and picture[x][y] == pixel_color
 
-current_color = picture[x][y]
 
-flood_fill(picture, 10, 10, x, y, current_color, "C")
-
-if [line.split() for line in open('resources/output.txt')] == flood_fill(picture, 10, 10, x, y, current_color, "C"):
-    for i in range(10):
-        for j in range(10):
-            print(picture[i][j], end=' ')
+if [line.split() for line in open("resources/output.txt")] == flood_fill(img, row, column, color):
+    for i in range(width):
+        for j in range(height):
+            print(img[i][j], end=' ')
         print()
-    print("Color flood equals with output.txt")
+    print("Color fill equals with output.txt")
 else:
-    print("Color flood is not the same as output.txt")
+    print("Color fill is not the same as output.txt")
